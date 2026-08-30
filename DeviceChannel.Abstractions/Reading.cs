@@ -2,7 +2,7 @@ namespace DeviceChannel.Abstractions;
 
 /// <summary>
 /// Valor obtenido de un <see cref="DeviceData"/>, junto al instante en que el
-/// adaptador lo obtuvo. El canal no clasifica la vigencia del valor: entrega
+/// canal lo obtuvo. El canal no clasifica la vigencia del valor: entrega
 /// <see cref="Timestamp"/> y corresponde al consumidor aplicar su propio
 /// criterio de antigüedad.
 /// </summary>

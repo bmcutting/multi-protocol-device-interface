@@ -6,7 +6,7 @@ using NModbus;
 namespace DeviceChannel.Modbus;
 
 /// <summary>
-/// Adaptador de <see cref="IDeviceChannel"/> sobre Modbus TCP.
+/// Canal de comunicación con un dispositivo Modbus TCP.
 /// </summary>
 /// <remarks>
 /// El protocolo no dispone de mecanismo de suscripción, por lo que

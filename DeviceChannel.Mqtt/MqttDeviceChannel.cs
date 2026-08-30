@@ -9,7 +9,7 @@ using MQTTnet.Protocol;
 namespace DeviceChannel.Mqtt;
 
 /// <summary>
-/// Adaptador de <see cref="IDeviceChannel"/> sobre MQTT.
+/// Canal de comunicación con una fuente MQTT.
 /// </summary>
 /// <remarks>
 /// El protocolo no admite consultas bajo demanda, por lo que el canal

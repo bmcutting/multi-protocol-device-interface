@@ -2,7 +2,7 @@ namespace DeviceChannel.Abstractions;
 
 /// <summary>
 /// Identifica un dato de un dispositivo. Determina qué dato se solicita, no su
-/// valor. El consumidor opera sobre <see cref="DeviceData"/>; cada adaptador
+/// valor. El consumidor opera sobre <see cref="DeviceData"/>; cada canal
 /// define la subclase con los campos que su protocolo requiere.
 /// </summary>
 public abstract record DeviceData

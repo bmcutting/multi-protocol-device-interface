@@ -7,7 +7,7 @@ namespace DeviceChannel.Configuration;
 
 /// <summary>
 /// Construye una instalación a partir de un archivo JSON. Es el único punto de
-/// la aplicación donde se decide qué adaptador corresponde a cada origen:
+/// la aplicación donde se decide qué canal corresponde a cada origen:
 /// añadir un protocolo es añadir una rama aquí y su implementación de
 /// <see cref="IDeviceChannel"/>.
 /// </summary>

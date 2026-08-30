@@ -1,22 +1,22 @@
 # DeviceChannel
 
-Implementación de referencia del artículo *Una interfaz para hablar con todos
-los protocolos*: un contrato único de comunicación con dispositivos de campo,
-con dos adaptadores debajo —Modbus TCP y MQTT— que no se parecen en nada entre
+Implementación de referencia del artículo *Una interfaz de software para
+protocolos industriales*: un contrato único de comunicación con dispositivos de campo,
+con dos canales debajo —Modbus TCP y MQTT— que no se parecen en nada entre
 sí.
 
 Quien consume los datos programa contra `IDeviceChannel` y recibe siempre un
 `Reading` con el mismo tipo de valor, sin saber qué protocolo hay debajo.
 Añadir un protocolo nuevo es implementar la interfaz una vez más, sin tocar
-los adaptadores existentes ni el código que consume los datos.
+los canales existentes ni el código que consume los datos.
 
 ## Proyectos
 
 | Proyecto | Contenido |
 | --- | --- |
 | `DeviceChannel.Abstractions` | El contrato: `IDeviceChannel`, `Reading`, `DeviceData`, `Result`. Sin dependencias. |
-| `DeviceChannel.Modbus` | Adaptador Modbus TCP sobre NModbus. |
-| `DeviceChannel.Mqtt` | Adaptador MQTT sobre MQTTnet. |
+| `DeviceChannel.Modbus` | Canal Modbus TCP sobre NModbus. |
+| `DeviceChannel.Mqtt` | Canal MQTT sobre MQTTnet. |
 | `DeviceChannel.Configuration` | Construye la instalación desde un archivo JSON. |
 | `DeviceChannel.Demo` | Consumidor que usa ambos canales sin una sola línea específica de protocolo. |
 | `DeviceChannel.TestSlave` | Esclavo Modbus TCP en memoria para probar sin hardware. |
@@ -105,7 +105,7 @@ mejor se ve la asimetría entre protocolos:
   [16:51:48] Bed 302-A              free           [MQTT]
 ```
 
-Modbus no tiene avisos: el adaptador pregunta cada dos segundos y solo emite
+Modbus no tiene avisos: el canal pregunta cada dos segundos y solo emite
 cuando el valor ha cambiado. MQTT sí avisa, y cuando pasan dos segundos sin
 noticias el canal repite el último valor conocido —marcado como
 `(unchanged)`, porque su `Timestamp` no ha cambiado— para que el silencio de
@@ -245,21 +245,21 @@ permite tocar —un enclavamiento, un relé de seguridad— es escribible para
 Modbus y no debe serlo para la aplicación.
 
 Esa restricción no viaja en ninguna trama, así que se declara en el contrato con
-`access`, y el adaptador la hace cumplir antes de llegar al enlace. Lo mismo
+`access`, y el canal la hace cumplir antes de llegar al enlace. Lo mismo
 ocurre con una sonda: la temperatura de la habitación está en un registro que
 Modbus deja escribir, y aun así escribirla no significa nada.
 
 ### Añadir un protocolo
 
 Todo el conocimiento de protocolos vive en `InstallationLoader`, en un `switch`
-de dos ramas que decide qué adaptador construir para cada origen. Sumar OPC UA
+de dos ramas que decide qué canal construir para cada origen. Sumar OPC UA
 es añadir una rama ahí y su implementación de `IDeviceChannel`. El código que
 consume los datos no se toca.
 
-## Cada protocolo trae media interfaz
+## Lo que cada protocolo no implementa
 
-Ninguno de los dos implementa el contrato entero. Cada uno trae una mitad y
-obliga a construir la otra:
+Ninguno de los dos implementa el contrato entero. Cada uno resuelve de fábrica
+una parte y obliga a construir la que le falta:
 
 | | Modbus TCP | MQTT |
 | --- | --- | --- |
@@ -275,7 +275,7 @@ Esa asimetría es el motivo de las decisiones siguientes.
 
 ### El canal no juzga la vigencia del valor
 
-`ReadAsync` no significa lo mismo en los dos adaptadores: en Modbus interroga al
+`ReadAsync` no significa lo mismo en los dos canales: en Modbus interroga al
 esclavo y en MQTT devuelve lo último que llegó, que puede ser de hace cinco
 minutos.
 
@@ -299,7 +299,7 @@ enlace roto.
 Vaciar la entrada tras entregarla resuelve un problema —saber si un valor es
 nuevo— y crea uno peor: dos lecturas seguidas devuelven cosas distintas sin que
 nada haya cambiado en planta, y `ReadAsync` deja de ser idempotente justo en el
-adaptador donde el consumidor no lo espera.
+canal donde el consumidor no lo espera.
 
 Aquí la caché conserva el valor y la novedad se resuelve con
 `Reading.Timestamp`, que es información y no un efecto secundario.
@@ -313,13 +313,13 @@ palabras, que varía según el equipo.
 
 Esa información falta en el protocolo, así que se declara en el contrato:
 `ModbusDeviceData` lleva `DataType` y `WordOrder`, `MqttDeviceData` lleva
-`PayloadType`, y el adaptador entrega un `double`, un `bool` o un `string`. El
+`PayloadType`, y el canal entrega un `double`, un `bool` o un `string`. El
 consumidor recibe el mismo tipo venga de donde venga.
 
 ### `maxStaleness` en lugar de un período interno
 
 La suscripción Modbus se fabrica con sondeo, y el período viene del parámetro
-`maxStaleness`, no de una constante en el adaptador. El bucle descuenta lo que
+`maxStaleness`, no de una constante en el canal. El bucle descuenta lo que
 tardó la propia lectura, de modo que el intervalo no derive con la latencia del
 enlace.
 
@@ -357,7 +357,7 @@ diferencia entre traer una operación de fábrica y tener que fabricarla.
 ## Añadir un protocolo
 
 Implementar `IDeviceChannel` y una subclase de `DeviceData` con lo que ese
-protocolo necesite para localizar un dato. Nada más: ni los adaptadores
+protocolo necesite para localizar un dato. Nada más: ni los canales
 existentes ni el código que consume los datos se tocan.
 
 Al hacerlo, las preguntas que conviene contestar son las mismas que resolvieron
