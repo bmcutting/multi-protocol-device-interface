@@ -316,10 +316,10 @@ Esa información falta en el protocolo, así que se declara en el contrato:
 `PayloadType`, y el canal entrega un `double`, un `bool` o un `string`. El
 consumidor recibe el mismo tipo venga de donde venga.
 
-### `maxStaleness` en lugar de un período interno
+### El período lo decide el consumidor
 
 La suscripción Modbus se fabrica con sondeo, y el período viene del parámetro
-`maxStaleness`, no de una constante en el canal. El bucle descuenta lo que
+`period`, no de una constante en el canal. El bucle descuenta lo que
 tardó la propia lectura, de modo que el intervalo no derive con la latencia del
 enlace.
 

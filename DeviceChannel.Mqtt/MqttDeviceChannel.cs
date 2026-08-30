@@ -16,6 +16,11 @@ namespace DeviceChannel.Mqtt;
 /// almacena la última publicación recibida de cada tema y
 /// <see cref="ReadAsync"/> la devuelve desde ese almacén. La entrada no se
 /// elimina al leerla, con el fin de mantener la idempotencia de la operación.
+/// <para>
+/// La suscripción no consulta nada: espera los mensajes del intermediario y
+/// solo emplea el período para detectar el silencio, reemitiendo el último
+/// valor conocido cuando ese tiempo transcurre sin publicaciones.
+/// </para>
 /// </remarks>
 public sealed class MqttDeviceChannel : IDeviceChannel
 {
@@ -133,14 +138,14 @@ public sealed class MqttDeviceChannel : IDeviceChannel
 
     public async IAsyncEnumerable<Reading> SubscribeAsync(
         DeviceData data,
-        TimeSpan maxStaleness,
+        TimeSpan period,
         [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (data is not MqttDeviceData mqttData)
             throw new ArgumentException($"El dato {data.Name} no es de una fuente MQTT.", nameof(data));
 
-        if (maxStaleness <= TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(maxStaleness), "El plazo debe ser mayor que cero.");
+        if (period <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(period), "El período debe ser mayor que cero.");
 
         Channel<Reading> channel = Channel.CreateBounded<Reading>(
             new BoundedChannelOptions(capacity: 64)
@@ -158,7 +163,7 @@ public sealed class MqttDeviceChannel : IDeviceChannel
         {
             while (!ct.IsCancellationRequested)
             {
-                Reading? next = await ReadNextOrTimeoutAsync(channel.Reader, maxStaleness, ct);
+                Reading? next = await ReadNextOrTimeoutAsync(channel.Reader, period, ct);
 
                 if (next is not null)
                 {

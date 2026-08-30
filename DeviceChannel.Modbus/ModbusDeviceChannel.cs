@@ -9,9 +9,10 @@ namespace DeviceChannel.Modbus;
 /// Canal de comunicación con un dispositivo Modbus TCP.
 /// </summary>
 /// <remarks>
-/// El protocolo no dispone de mecanismo de suscripción, por lo que
-/// <see cref="SubscribeAsync"/> se implementa mediante sondeo periódico. Dado
-/// que el sondeo comparte conexión con las lecturas del consumidor, todas las
+/// El protocolo no dispone de mecanismo de notificación, por lo que
+/// <see cref="SubscribeAsync"/> se implementa consultando al esclavo con la
+/// cadencia que indica el período y emitiendo el valor cuando cambia. Dado que
+/// ese sondeo comparte conexión con las lecturas del consumidor, todas las
 /// transacciones se serializan.
 /// </remarks>
 public sealed class ModbusDeviceChannel : IDeviceChannel
@@ -141,14 +142,14 @@ public sealed class ModbusDeviceChannel : IDeviceChannel
 
     public async IAsyncEnumerable<Reading> SubscribeAsync(
         DeviceData data,
-        TimeSpan maxStaleness,
+        TimeSpan period,
         [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (data is not ModbusDeviceData modbusData)
             throw new ArgumentException($"El dato {data.Name} no es de un dispositivo Modbus.", nameof(data));
 
-        if (maxStaleness <= TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(maxStaleness), "El plazo debe ser mayor que cero.");
+        if (period <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(period), "El período debe ser mayor que cero.");
 
         object? lastValue = null;
         bool first = true;
@@ -161,7 +162,7 @@ public sealed class ModbusDeviceChannel : IDeviceChannel
 
             if (result.IsFailure)
             {
-                await Task.Delay(maxStaleness, _time, ct);
+                await Task.Delay(period, _time, ct);
                 continue;
             }
 
@@ -176,7 +177,7 @@ public sealed class ModbusDeviceChannel : IDeviceChannel
                 yield return reading;
             }
 
-            TimeSpan remaining = maxStaleness - elapsed;
+            TimeSpan remaining = period - elapsed;
             if (remaining > TimeSpan.Zero)
                 await Task.Delay(remaining, _time, ct);
         }

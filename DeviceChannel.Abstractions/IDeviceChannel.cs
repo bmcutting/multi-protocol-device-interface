@@ -18,8 +18,14 @@ public interface IDeviceChannel : IAsyncDisposable
 
     Task<Result> WriteAsync(DeviceData data, object value, CancellationToken ct = default);
 
+    /// <param name="period">
+    /// Período con el que el consumidor espera tener noticias del dato. Cada
+    /// canal lo cumple con los medios de su protocolo: el que no dispone de
+    /// notificación consulta con esa cadencia; el que la recibe la aprovecha y
+    /// solo interviene cuando transcurre ese tiempo sin novedades.
+    /// </param>
     IAsyncEnumerable<Reading> SubscribeAsync(
         DeviceData data,
-        TimeSpan maxStaleness,
+        TimeSpan period,
         CancellationToken ct = default);
 }
