@@ -330,14 +330,29 @@ el canal reemite el último valor conocido.
 
 ### Los accesos Modbus se serializan
 
-Modbus TCP sobre un mismo socket es estrictamente petición-respuesta. Como el
-sondeo de la suscripción y las lecturas del consumidor comparten conexión, todas
-las transacciones pasan por un `SemaphoreSlim`. Sin eso, las tramas se
-entrelazarían sobre el enlace.
+Modbus TCP sobre un mismo socket es estrictamente petición-respuesta: se manda
+una consulta, se espera la respuesta, y hasta que no llega no se puede mandar la
+siguiente. No es una limitación de esta implementación, es cómo está definido el
+protocolo. Si dos consultas salen a la vez, las respuestas vuelven sin nada que
+indique a cuál corresponde cada una.
 
-Es una consecuencia directa de fabricar el push: al no existir la suscripción
-nativa, aparece un hilo de fondo que compite por el mismo recurso que el
-consumidor.
+Un programa que solo lee de vez en cuando nunca se topa con eso. El problema lo
+crea la suscripción fabricada: `SubscribeAsync` deja un bucle sondeando en
+segundo plano, y ese bucle usa la misma conexión por la que el consumidor sigue
+pidiendo lecturas y escrituras cuando le conviene. Dos cosas hablando a la vez
+por un enlace que no lo admite.
+
+Por eso todas las transacciones —las del sondeo y las del consumidor— pasan por
+un `SemaphoreSlim`, que es un cerrojo que solo deja pasar a uno a la vez y hace
+esperar en cola a los demás. Quien llega mientras hay otra transacción en curso
+espera unos milisegundos y entra después.
+
+Conviene ver de dónde salió ese cerrojo, porque no lo pide Modbus: lo pide haber
+prometido una suscripción que el protocolo no tiene. El consumidor pidió que le
+avisaran de los cambios, y el resultado es que sus propias lecturas compiten con
+un sondeo que él no ve. En MQTT nada de esto ocurre —el broker empuja por su
+cuenta y la suscripción no genera tráfico saliente—, y esa es exactamente la
+diferencia entre traer una operación de fábrica y tener que fabricarla.
 
 ## Añadir un protocolo
 
