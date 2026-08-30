@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeviceChannel.Abstractions\DeviceChannel.Abstractions.csproj" />
+    <ProjectReference Include="..\DeviceChannel.Modbus\DeviceChannel.Modbus.csproj" />
+    <ProjectReference Include="..\DeviceChannel.Mqtt\DeviceChannel.Mqtt.csproj" />
+  </ItemGroup>
+
+</Project>

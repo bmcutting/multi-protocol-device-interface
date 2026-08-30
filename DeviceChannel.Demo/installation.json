@@ -1,0 +1,69 @@
+{
+  "sources": [
+    {
+      "name": "wired",
+      "protocol": "modbus",
+      "endpoint": "tcp://127.0.0.1:5020"
+    },
+    {
+      "name": "wireless",
+      "protocol": "mqtt",
+      "endpoint": "127.0.0.1:1883",
+      "topicFilters": [ "hospital/room302/#" ]
+    }
+  ],
+
+  "data": [
+    {
+      "name": "Room temperature",
+      "source": "wired",
+      "device": "Room 302",
+      "unit": "°C",
+      "unitId": 1,
+      "registerType": "HoldingRegister",
+      "startAddress": 0,
+      "dataType": "Float32",
+      "access": "ReadOnly"
+    },
+    {
+      "name": "Thermostat setpoint",
+      "source": "wired",
+      "device": "Room 302",
+      "unit": "°C",
+      "unitId": 1,
+      "registerType": "HoldingRegister",
+      "startAddress": 2,
+      "dataType": "Float32",
+      "access": "ReadWrite"
+    },
+    {
+      "name": "Room light",
+      "source": "wired",
+      "device": "Room 302",
+      "unit": "light",
+      "unitId": 1,
+      "registerType": "Coil",
+      "startAddress": 0,
+      "dataType": "Bool",
+      "access": "ReadWrite"
+    },
+    {
+      "name": "Bed 302-A",
+      "source": "wireless",
+      "device": "Room 302",
+      "unit": "bed",
+      "topic": "hospital/room302/bed/occupied",
+      "payloadType": "Boolean",
+      "access": "ReadWrite"
+    },
+    {
+      "name": "Room humidity",
+      "source": "wireless",
+      "device": "Room 302",
+      "unit": "%",
+      "topic": "hospital/room302/humidity",
+      "payloadType": "Number",
+      "access": "ReadWrite"
+    }
+  ]
+}
